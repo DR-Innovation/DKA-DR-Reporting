@@ -77,7 +77,8 @@ if __name__ == '__main__':
                 'asset_id',
                 'produciton_id',
                 'duration',
-                'published_date',
+                'published_on_dka_date',
+                'first_published_date',
                 'url'
             ])
             for o in objects:
@@ -112,6 +113,9 @@ if __name__ == '__main__':
                         duration_hours = duration_minutes / 60.0
                         duration = '{:.2f}'.format(duration_hours)
 
+                    # First published
+                    first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
+
                     #object_created_date = o.find('DateCreated').text
                     accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
 
@@ -124,6 +128,7 @@ if __name__ == '__main__':
                         or_empty(duration),
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
+                        or_empty(first_published_date),
                         or_empty(url)
                     ]
                     output_writer.writerow(row)

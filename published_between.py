@@ -1,13 +1,11 @@
 import sys
-from os import listdir
-from os.path import join, dirname, abspath, isfile
 import xml.etree.ElementTree as ET
 import requests
-from datetime import datetime
 import csv
 
 CHAOS_ACCESSPOINT_GUID = 'C4C2B8DA-A980-11E1-814B-02CEA2621172'
 DATETIME_FORMAT = '%d/%m/%y %H:%M:%S'
+
 
 def get_objects(query, sort='', pageIndex=0, pageSize=100):
     data = {
@@ -28,7 +26,7 @@ def get_objects(query, sort='', pageIndex=0, pageSize=100):
         module_result = portal_result.find('ModuleResults').find('ModuleResult')
         return module_result.find('Results').findall('Result')
     else:
-        raise Error('Could not get the object from CHAOS.')
+        raise Exception('Could not get the object from CHAOS.')
 
 
 def get_all_objects(query, sort=''):
@@ -55,6 +53,7 @@ def get_object_metadata(object, metadata_guid):
     else:
         return None
 
+
 def or_empty(v):
     return v.encode('utf8') if v else ''
 
@@ -73,6 +72,14 @@ if __name__ == '__main__':
 
         with open(sys.argv[3], 'wb') as output_file:
             output_writer = csv.writer(output_file)
+            output_writer.writerow([
+                'title',
+                'asset_id',
+                'produciton_id',
+                'duration',
+                'published_date',
+                'url'
+            ])
             for o in objects:
                 metadata = get_object_metadata(o, '5906a41b-feae-48db-bfb7-714b3e105396')
                 ns = {
@@ -92,6 +99,19 @@ if __name__ == '__main__':
                     # We need only one
                     production_id = production_id[0] if len(production_id) > 0 else ''
 
+                    duration = [f.find('dka:Value', ns).text
+                                       for f in metafields
+                                       if f.find('dka:Key', ns).text == 'Duration']
+                    # We need only one
+                    duration = duration[0] if len(duration) > 0 else ''
+
+                    if duration:
+                        # Convert duration to hours
+                        duration_secs = float(duration) / 1000.0
+                        duration_minutes = duration_secs / 60.0
+                        duration_hours = duration_minutes / 60.0
+                        duration = '{:.2f}'.format(duration_hours)
+
                     #object_created_date = o.find('DateCreated').text
                     accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
 
@@ -101,10 +121,14 @@ if __name__ == '__main__':
                         or_empty(title),
                         or_empty(external_identifier),
                         or_empty(production_id),
+                        or_empty(duration),
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(url)
                     ]
                     output_writer.writerow(row)
     else:
-        print('Needs at least three runtime arguments.')
+        print('Needs at least three runtime arguments, ex: %s '
+              '1970-01-01T12:00:00Z '
+              '2015-12-30T12:00:00Z '
+              'output.csv' % sys.argv[0])

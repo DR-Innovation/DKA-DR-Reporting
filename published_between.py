@@ -97,18 +97,20 @@ if __name__ == '__main__':
                     production_id = [f.find('dka:Value', ns).text
                                      for f in metafields
                                      if f.find('dka:Key', ns).text == 'ProductionId']
-                    # We need only one
+                    # We need only one product
                     production_id = production_id[0] if len(production_id) > 0 else ''
 
                     duration = [f.find('dka:Value', ns).text
                                        for f in metafields
                                        if f.find('dka:Key', ns).text == 'Duration']
-                    # We need only one
+                    # We need only one duration
                     duration = duration[0] if len(duration) > 0 else ''
+                    # Remove anything but numbers from duration
+                    duration_only_numbers = ''.join(c for c in duration if c.isdigit())
 
-                    if duration:
+                    if duration_only_numbers:
                         # Convert duration to hours
-                        duration_secs = float(duration) / 1000.0
+                        duration_secs = float(duration_only_numbers) / 1000.0
                         duration_minutes = duration_secs / 60.0
                         duration_hours = duration_minutes / 60.0
                         duration = '{:.2f}'.format(duration_hours)

@@ -74,13 +74,13 @@ if __name__ == '__main__':
         with open(sys.argv[3], 'wb') as output_file:
             output_writer = csv.writer(output_file)
             output_writer.writerow([
-                'title',
-                'asset_id',
-                'produciton_id',
-                'duration',
-                'published_on_dka_date',
-                'first_published_date',
-                'url'
+                'Titel',
+                'AssetID',
+                'ProductionId',
+                'Varighed',
+                'Publiceret på DKA',
+                'Først publiceret',
+                'Webadresse'
             ])
             for o in objects:
                 metadata = get_object_metadata(o, '5906a41b-feae-48db-bfb7-714b3e105396')

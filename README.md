@@ -18,3 +18,10 @@ crontab -e
 ```
 ~/generate-dka-report.sh
 ```
+
+### Generate script looks like this:
+```
+?!/bin/bash
+d=$(date +%y-%m)
+python ~/DKA-DR-Reporting/published_between.py 1970-01-01T12:00:00Z 2030-12-30T12:00:00Z$
+```

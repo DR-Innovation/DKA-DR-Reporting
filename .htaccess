@@ -92,3 +92,11 @@
   HeaderName /dr-reports/theme/header.html
   ReadmeName /dr-reports/theme/footer.html
   IndexStyleSheet "/dr-reports/theme/style.css"
+
+
+#
+# FORCE CSV DOWNLOAD
+#
+
+  AddType application/octet-stream .csv
+  AddType application/octet-stream .xlsx

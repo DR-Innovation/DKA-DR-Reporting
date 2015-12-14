@@ -116,7 +116,9 @@ if __name__ == '__main__':
                         duration_secs = float(duration_only_numbers) / 1000.0
                         duration_minutes = duration_secs / 60.0
                         duration_hours = duration_minutes / 60.0
-                        duration = '{:.2f}'.format(duration_hours)
+                        duration_formatted = '{:.2f}'.format(duration_hours)
+                    else:
+                        duration_formatted = ''
 
                 # FIRST PUBLISHED
                     first_published_date = metadata.find('dka:FirstPublishedDate', ns).text

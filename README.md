@@ -21,9 +21,10 @@ crontab -e
 
 ### Generate script looks like this:
 ```
-?!/bin/bash
-d=$(date +%y-%m)
-python ~/DKA-DR-Reporting/published_between.py 1970-01-01T12:00:00Z 2030-12-30T12:00:00Z$
+#?!/bin/bash
+d=$(date +%Y-%m)
+python ~/DKA-DR-Reporting/published_between.py 1970-01-01T12:00:00Z 2030-12-30T12:00:00Z ~/dr-reports/$d.csv
+ssconvert ~/dr-reports/$d.csv ~/dr-reports/$d.xlsx
 ```
 
 ### Update from git

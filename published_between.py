@@ -4,10 +4,9 @@ import sys
 import xml.etree.ElementTree as ET
 import requests
 import csv
+import datetime
 
 CHAOS_ACCESSPOINT_GUID = 'C4C2B8DA-A980-11E1-814B-02CEA2621172'
-DATETIME_FORMAT = '%d/%m/%y %H:%M:%S'
-
 
 def get_objects(query, sort='', pageIndex=0, pageSize=100):
     data = {
@@ -96,12 +95,14 @@ if __name__ == '__main__':
                     external_identifier = metadata.find('dka:ExternalIdentifier', ns).text
                     metafields = metadata.findall('dka:Metafield', ns)
 
+                # PRODUCTION ID
                     production_id = [f.find('dka:Value', ns).text
                                      for f in metafields
                                      if f.find('dka:Key', ns).text == 'ProductionId']
                     # We need only one product
                     production_id = production_id[0] if len(production_id) > 0 else ''
 
+                # DURATION
                     duration = [f.find('dka:Value', ns).text
                                        for f in metafields
                                        if f.find('dka:Key', ns).text == 'Duration']
@@ -117,19 +118,33 @@ if __name__ == '__main__':
                         duration_hours = duration_minutes / 60.0
                         duration = '{:.2f}'.format(duration_hours)
 
-                    # First published
+                # FIRST PUBLISHED
                     first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
+                    # Remove T00:00:00
+                    first_published_date = first_published_date.replace("T00:00:00", "")
+                    # Year first
+                    if len(first_published_date) == 10:
+                        if first_published_date.index('-') == 2:
+                            first_published_date = datetime.datetime.strptime(first_published_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
-                    #object_created_date = o.find('DateCreated').text
+                # PUBLISHED ON DKA
                     accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
+                    # Remove everything after first space
+                    accesspoint_startdate = accesspoint_startdate.split(' ', 1)[0]
+                    # Year first
+                    if len(accesspoint_startdate) == 10:
+                        if accesspoint_startdate.index('-') == 2:
+                            accesspoint_startdate = datetime.datetime.strptime(accesspoint_startdate, '%d-%m-%Y').strftime('%Y-%m-%d')
 
+                # URL
                     url = 'http://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
 
+                # Populate row
                     row = [
                         or_empty(title),
                         or_empty(external_identifier),
                         or_empty(production_id),
-                        or_empty(duration),
+                        or_empty(duration_formatted),
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(first_published_date),

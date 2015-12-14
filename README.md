@@ -31,4 +31,6 @@ ssconvert ~/dr-reports/$d.csv ~/dr-reports/$d.xlsx
 ```
 cd DKA-DR-Reporting/
 git pull
+mv -f theme ~/dr-reports
+mv .htaccess ~/dr-reports
 ```

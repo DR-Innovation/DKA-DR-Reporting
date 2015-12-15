@@ -30,6 +30,7 @@ body {
 h1 {
   font-weight: 300;
   margin-bottom: 0.5em;
+  text-align: center;
 }
 .indexcolname {
   font-weight: 700;
@@ -57,7 +58,8 @@ a:hover {
 \*------------------------------------*/
 
 table {
-  width: 100%;
+  width: 400px;
+  margin: 0 auto;
   border-collapse: collapse;
   font-size: .875em;
 }
@@ -73,25 +75,9 @@ th {
   font-size: .75em;
   padding-right: 20px;
 }
-
-/* 2nd Column: Filename */
-
-th + th {
-  width: 65%;
-}
-
-/* 3rd Column: Last Modified */
-
-th + th + th {}
-
-/* 4th Column: Size */
-
-th + th + th + th {
-  width: 5%;
-}
 tr td:first-of-type {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 2px;
+  width: 34px;
 }
 td {
   padding: 5px 0;

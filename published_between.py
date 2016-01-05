@@ -149,88 +149,88 @@ if __name__ == '__main__':
                     metafields = metadata.findall('dka:Metafield', ns)
 
                 # PRODUCTION ID
-                    production_id = [f.find('dka:Value', ns).text
-                                     for f in metafields
-                                     if f.find('dka:Key', ns).text == 'ProductionId']
-                    # We need only one product
-                    production_id = production_id[0] if len(production_id) > 0 else ''
+                production_id = [f.find('dka:Value', ns).text
+                                 for f in metafields
+                                 if f.find('dka:Key', ns).text == 'ProductionId']
+                # We need only one product
+                production_id = production_id[0] if len(production_id) > 0 else ''
 
                 # DURATION
-                    duration = [f.find('dka:Value', ns).text
-                                       for f in metafields
-                                       if f.find('dka:Key', ns).text == 'Duration']
-                    # We need only one duration
-                    duration = duration[0] if len(duration) > 0 else ''
-                    # Remove anything but numbers from duration
-                    duration_only_numbers = ''.join(c for c in duration if c.isdigit())
+                duration = [f.find('dka:Value', ns).text
+                                   for f in metafields
+                                   if f.find('dka:Key', ns).text == 'Duration']
+                # We need only one duration
+                duration = duration[0] if len(duration) > 0 else ''
+                # Remove anything but numbers from duration
+                duration_only_numbers = ''.join(c for c in duration if c.isdigit())
 
-                    if duration_only_numbers:
-                        # Convert duration to hours
-                        duration_secs = float(duration_only_numbers) / 1000.0
-                        duration_minutes = duration_secs / 60.0
-                        duration_hours = duration_minutes / 60.0
-                    else:
-                        duration_hours = 0
+                if duration_only_numbers:
+                    # Convert duration to hours
+                    duration_secs = float(duration_only_numbers) / 1000.0
+                    duration_minutes = duration_secs / 60.0
+                    duration_hours = duration_minutes / 60.0
+                else:
+                    duration_hours = 0
 
                 # FIRST PUBLISHED
-                    first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
-                    # Remove T00:00:00
-                    first_published_date = first_published_date.replace("T00:00:00", "")
-                    # Year first
-                    if len(first_published_date) == 10:
-                        if first_published_date.index('-') == 2:
-                            first_published_date = datetime.datetime.strptime(first_published_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+                first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
+                # Remove T00:00:00
+                first_published_date = first_published_date.replace("T00:00:00", "")
+                # Year first
+                if len(first_published_date) == 10:
+                    if first_published_date.index('-') == 2:
+                        first_published_date = datetime.datetime.strptime(first_published_date, '%d-%m-%Y').strftime('%Y-%m-%d')
 
                 # PUBLISHED ON DKA
-                    accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
-                    # Remove everything after first space
-                    accesspoint_startdate = accesspoint_startdate.split(' ', 1)[0]
-                    # Year first
-                    if len(accesspoint_startdate) == 10:
-                        if accesspoint_startdate.index('-') == 2:
-                            accesspoint_startdate = datetime.datetime.strptime(accesspoint_startdate, '%d-%m-%Y').strftime('%Y-%m-%d')
+                accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
+                # Remove everything after first space
+                accesspoint_startdate = accesspoint_startdate.split(' ', 1)[0]
+                # Year first
+                if len(accesspoint_startdate) == 10:
+                    if accesspoint_startdate.index('-') == 2:
+                        accesspoint_startdate = datetime.datetime.strptime(accesspoint_startdate, '%d-%m-%Y').strftime('%Y-%m-%d')
 
                 # URL
-                    url = 'http://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
+                url = 'http://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
 
                 # SLUG
-                    slug = None if crowd_metadata is None else crowd_metadata.find('dkac:Slug', ns).text
-                    urlslug = 'http://www.danskkulturarv.dk/dr/%s/' % slug
+                slug = None if crowd_metadata is None else crowd_metadata.find('dkac:Slug', ns).text
+                urlslug = 'http://www.danskkulturarv.dk/dr/%s/' % slug
 
                 # PLAY COUNT
-                    play_count = plays.get(urlslug, 0)
+                play_count = plays.get(urlslug, 0)
 
                 # PLAYED HOURS
-                    played_hours = play_count * duration_hours
+                played_hours = play_count * duration_hours
 
                 # COMPLETED COUNT
-                    completed_count = completes.get(urlslug, 0)
+                completed_count = completes.get(urlslug, 0)
 
                 # COMPLETED HOURS
-                    completed_hours = completed_count * duration_hours
+                completed_hours = completed_count * duration_hours
 
                 # FORMATED DURATION
-                    duration_formatted = '{:.2f}'.format(duration_hours)
-                    played_hours_formatted = '{:.2f}'.format(played_hours)
-                    completed_hours_formatted = '{:.2f}'.format(completed_hours)
+                duration_formatted = '{:.2f}'.format(duration_hours)
+                played_hours_formatted = '{:.2f}'.format(played_hours)
+                completed_hours_formatted = '{:.2f}'.format(completed_hours)
 
                 # Populate row
-                    row = [
-                        or_empty(title),
-                        or_empty(external_identifier),
-                        or_empty(production_id),
-                        or_empty(duration_formatted),
-                        or_empty(play_count),
-                        or_empty(played_hours_formatted),
-                        or_empty(completed_count),
-                        or_empty(completed_hours_formatted),
-                        #or_empty(object_created_date),
-                        or_empty(accesspoint_startdate),
-                        or_empty(first_published_date),
-                        or_empty(urlslug),
-                        or_empty(url)
-                    ]
-                    output_writer.writerow(row)
+                row = [
+                    or_empty(title),
+                    or_empty(external_identifier),
+                    or_empty(production_id),
+                    or_empty(duration_formatted),
+                    or_empty(play_count),
+                    or_empty(played_hours_formatted),
+                    or_empty(completed_count),
+                    or_empty(completed_hours_formatted),
+                    #or_empty(object_created_date),
+                    or_empty(accesspoint_startdate),
+                    or_empty(first_published_date),
+                    or_empty(urlslug),
+                    or_empty(url)
+                ]
+                output_writer.writerow(row)
     else:
         print('Needs at least three runtime arguments, ex: %s '
               '2015-01-01T12:00:00Z '

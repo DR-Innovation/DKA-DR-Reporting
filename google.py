@@ -88,6 +88,8 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
         total_results = result.get('totalResults')
         for url, count in result.get('rows'):
             url = urllib.unquote(url)
+            if type(url) == 'unicode':
+                url = url.decode('utf8')
             events[url] = int(count)
 
     return events

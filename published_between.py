@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 import csv
 import datetime
+from google import get_all_events
 
 CHAOS_ACCESSPOINT_GUID = 'C4C2B8DA-A980-11E1-814B-02CEA2621172'
 
@@ -56,7 +57,12 @@ def get_object_metadata(object, metadata_guid):
 
 
 def or_empty(v):
-    return v.encode('utf8') if v else ''
+    if type(v) == str:
+        return v.encode('utf8')
+    elif type(v) == int:
+        return v
+    else:
+        return ''
 
 if __name__ == '__main__':
     if len(sys.argv) >= 4:
@@ -69,6 +75,19 @@ if __name__ == '__main__':
         query = " AND ".join(query)
         print("Requesting: %s" % query)
 
+        ga_ids = 'ga:51793449'
+        start_date = '2015-01-01'
+        end_date = '2015-12-31'
+
+        plays = get_all_events(ga_ids,
+                               'JW Player Video Plays',
+                               start_date,
+                               end_date)
+
+        completes = get_all_events(ga_ids,
+                                   'JW Player Video Completes',
+                                   start_date,
+                                   end_date)
         objects = get_all_objects(query, sort='apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc')
 
         with open(sys.argv[3], 'wb') as output_file:
@@ -78,9 +97,14 @@ if __name__ == '__main__':
                 'AssetID',
                 'ProductionId',
                 'Varighed',
+                'Påbegyndte afspilninger',
+                'Påbegyndte afspilningstimer',
+                'Gennemførte afspilninger',
+                'Gennemførte afspilningstimer',
                 'Publiceret på DKA',
                 'Først publiceret',
-                'Webadresse'
+                'Webadresse',
+                'Webadresse (alternativ)'
             ])
             for o in objects:
                 metadata = get_object_metadata(o, '5906a41b-feae-48db-bfb7-714b3e105396')
@@ -118,9 +142,8 @@ if __name__ == '__main__':
                         duration_secs = float(duration_only_numbers) / 1000.0
                         duration_minutes = duration_secs / 60.0
                         duration_hours = duration_minutes / 60.0
-                        duration_formatted = '{:.2f}'.format(duration_hours)
                     else:
-                        duration_formatted = ''
+                        duration_hours = 0
 
                 # FIRST PUBLISHED
                     first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
@@ -145,7 +168,24 @@ if __name__ == '__main__':
 
                 # SLUG
                     slug = None if crowd_metadata is None else crowd_metadata.find('dkac:Slug', ns).text
-                    urlslug = 'http://www.danskkulturarv.dk/chaos_post/%s/' % slug
+                    urlslug = 'http://www.danskkulturarv.dk/dr/%s/' % slug
+
+                # PLAY COUNT
+                    play_count = plays.get(urlslug, 0)
+
+                # PLAYED HOURS
+                    played_hours = play_count * duration_hours
+
+                # COMPLETED COUNT
+                    completed_count = completes.get(urlslug, 0)
+
+                # COMPLETED HOURS
+                    completed_hours = completed_count * duration_hours
+
+                # FORMATED DURATION
+                    duration_formatted = '{:.2f}'.format(duration_hours)
+                    played_hours_formatted = '{:.2f}'.format(played_hours)
+                    completed_hours_formatted = '{:.2f}'.format(completed_hours)
 
                 # Populate row
                     row = [
@@ -153,11 +193,15 @@ if __name__ == '__main__':
                         or_empty(external_identifier),
                         or_empty(production_id),
                         or_empty(duration_formatted),
+                        or_empty(play_count),
+                        or_empty(played_hours_formatted),
+                        or_empty(completed_count),
+                        or_empty(completed_hours_formatted),
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(first_published_date),
-                        or_empty(url),
-                        or_empty(urlslug)
+                        or_empty(urlslug),
+                        or_empty(url)
                     ]
                     output_writer.writerow(row)
     else:

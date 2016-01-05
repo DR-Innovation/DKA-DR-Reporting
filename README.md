@@ -2,6 +2,7 @@
 Scripts that collects objects published on danskkulturarv.dk for internal reporting
 
 ### Install the requirements
+sudo apt-get install python-dev libssl-dev libffi-dev
 pip install -r requirements.txt
 
 ### Get in the correct folder

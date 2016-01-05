@@ -1,6 +1,7 @@
 from apiclient.discovery import build
 from oauth2client.client import SignedJwtAssertionCredentials
 
+import urllib
 import httplib2
 
 
@@ -86,6 +87,7 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
         start_index += MAX_RESULTS
         total_results = result.get('totalResults')
         for url, count in result.get('rows'):
+            url = urllib.unquote(url)
             events[url] = int(count)
 
     return events

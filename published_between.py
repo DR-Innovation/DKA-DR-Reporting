@@ -84,8 +84,10 @@ if __name__ == '__main__':
             ])
             for o in objects:
                 metadata = get_object_metadata(o, '5906a41b-feae-48db-bfb7-714b3e105396')
+                crowd_metadata = get_object_metadata(o, 'a37167e0-e13b-4d29-8a41-b0ffbaa1fe5f')
                 ns = {
-                    'dka': 'http://www.danskkulturarv.dk/DKA2.xsd'
+                    'dka': 'http://www.danskkulturarv.dk/DKA2.xsd',
+                    'dkac': 'http://www.danskkulturarv.dk/DKA-Crowd.xsd'
                 }
                 #ET.dump(o)
                 if metadata is None:
@@ -141,6 +143,10 @@ if __name__ == '__main__':
                 # URL
                     url = 'http://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
 
+                # SLUG
+                    slug = None if crowd_metadata is None else crowd_metadata.find('dkac:Slug', ns).text
+                    urlslug = 'http://www.danskkulturarv.dk/chaos_post/%s/' % slug
+
                 # Populate row
                     row = [
                         or_empty(title),
@@ -150,11 +156,12 @@ if __name__ == '__main__':
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(first_published_date),
-                        or_empty(url)
+                        or_empty(url),
+                        or_empty(urlslug)
                     ]
                     output_writer.writerow(row)
     else:
         print('Needs at least three runtime arguments, ex: %s '
-              '1970-01-01T12:00:00Z '
+              '2015-01-01T12:00:00Z '
               '2015-12-30T12:00:00Z '
               'output.csv' % sys.argv[0])

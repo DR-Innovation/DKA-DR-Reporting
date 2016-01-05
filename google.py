@@ -1,7 +1,8 @@
 from apiclient.discovery import build
 from oauth2client.client import SignedJwtAssertionCredentials
+from collections import defaultdict
 
-import urllib
+import urllib2
 import httplib2
 
 
@@ -75,7 +76,8 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
 
     # Let's first assume that there is more results than we ask for.
     total_results = MAX_RESULTS+1
-    events = {}
+    # This type of dict lets us increment even if no value exists already.
+    events = defaultdict(int)
     while start_index <= total_results:
         result = get_events(ga_service,
                             ga_ids,
@@ -87,10 +89,10 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
         start_index += MAX_RESULTS
         total_results = result.get('totalResults')
         for url, count in result.get('rows'):
-            url = urllib.unquote(url)
-            if type(url) == 'unicode':
-                url = url.decode('utf8')
-            events[url] = int(count)
+            url = urllib2.unquote(url.encode('utf8')).decode('utf8')
+            # Strip away any query strings
+            url = url.split('?', 1)[0]
+            events[url] += int(count)
 
     return events
 

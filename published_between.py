@@ -1,18 +1,20 @@
 # coding=utf-8
 
 import sys
+import os
 import xml.etree.ElementTree as ET
 import requests
 import csv
 import datetime
 from google import get_all_events
 
-CHAOS_ACCESSPOINT_GUID = 'C4C2B8DA-A980-11E1-814B-02CEA2621172'
+BASE_URL = 'http://api.danskkulturarv.dk'
 
-def get_objects(query, sort='', pageIndex=0, pageSize=100):
+
+def get_objects(query, sessionGuid, sort='', pageIndex=0, pageSize=100):
     data = {
         'query': query,
-        'accessPointGUID': CHAOS_ACCESSPOINT_GUID,
+        'sessionGUID': sessionGuid,
         'includeMetadata': 'true',
         'includeFiles': 'true',
         'includeObjectRelations': 'true',
@@ -21,7 +23,7 @@ def get_objects(query, sort='', pageIndex=0, pageSize=100):
         'pageIndex': pageIndex,
         'pageSize': pageSize
     }
-    url = 'http://api.danskkulturarv.dk/Object/Get'
+    url = BASE_URL + '/Object/Get'
     r = requests.get(url, params=data)
     if r.status_code == 200:
         portal_result = ET.fromstring(r.text.encode('utf8'))
@@ -31,11 +33,31 @@ def get_objects(query, sort='', pageIndex=0, pageSize=100):
         raise Exception('Could not get the object from CHAOS.')
 
 
-def get_all_objects(query, sort=''):
+def get_session_guid():
+    r = requests.get(BASE_URL+'/Session/Create?protocolVersion=4')
+    portal_result = ET.fromstring(r.text.encode('utf8'))
+    module_result = portal_result.find('ModuleResults').find('ModuleResult')
+    result = module_result.find('Results').find('Result')
+    return result.find('SessionGUID').text
+
+
+def login(sessionGuid, email, password):
+    url = BASE_URL
+    url += '/EmailPassword/Login?'
+    url += 'email=%s&password=%s&sessionGUID=%s' % (email,
+                                                    password,
+                                                    sessionGuid)
+    return requests.get(url).status_code == 200
+
+
+def get_all_objects(query, email, password, sort=''):
     all_objects = []
     pageIndex = 0
+
+    sessionGuid = get_session_guid()
+    login(sessionGuid, email, password)
     while True:
-        objects = get_objects(query, sort, pageIndex)
+        objects = get_objects(query, sessionGuid, sort, pageIndex)
         print('Got page indexed %u' % pageIndex)
         pageIndex += 1
         # Were objects returned?
@@ -68,6 +90,9 @@ if __name__ == '__main__':
     if len(sys.argv) >= 4:
         from_time = sys.argv[1]
         to_time = sys.argv[2]
+        email = os.environ.get('CHAOS_EMAIL', '')
+        password = os.environ.get('CHAOS_PASSWORD', '')
+
         query = [
             'DKA-Organization: "DR"',
             'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart: [%s TO %s]' % (from_time, to_time)
@@ -88,7 +113,9 @@ if __name__ == '__main__':
                                    'JW Player Video Completes',
                                    start_date,
                                    end_date)
-        objects = get_all_objects(query, sort='apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc')
+        sorted_by = 'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc'
+        objects = get_all_objects(query, email, password,
+                                  sort=sorted_by)
 
         with open(sys.argv[3], 'wb') as output_file:
             output_writer = csv.writer(output_file)

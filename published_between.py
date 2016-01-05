@@ -57,10 +57,8 @@ def get_object_metadata(object, metadata_guid):
 
 
 def or_empty(v):
-    if type(v) == str:
+    if type(v) == str or type(v) == unicode:
         return v.encode('utf8')
-    elif type(v) == unicode:
-        return v
     elif type(v) == int:
         return v
     else:

@@ -1,3 +1,5 @@
 /output.csv
 *.p12
 *.pyc
+.venv
+service-account-key.json

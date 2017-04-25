@@ -10,6 +10,8 @@ from google import get_all_events
 
 BASE_URL = 'http://api.danskkulturarv.dk'
 
+class ChaosException(Exception):
+    pass
 
 def get_objects(query, sessionGuid, sort='', pageIndex=0, pageSize=100):
     data = {
@@ -28,9 +30,13 @@ def get_objects(query, sessionGuid, sort='', pageIndex=0, pageSize=100):
     if r.status_code == 200:
         portal_result = ET.fromstring(r.text.encode('utf8'))
         module_result = portal_result.find('ModuleResults').find('ModuleResult')
-        return module_result.find('Results').findall('Result')
+        error = module_result.find('Results').find('Error')
+        if error:
+            raise ChaosException(error.find('Message').text)
+        else:
+            return module_result.find('Results').findall('Result')
     else:
-        raise Exception('Could not get the object from CHAOS.')
+        raise ChaosException('Could not get the object from CHAOS.')
 
 
 def get_session_guid():
@@ -79,9 +85,7 @@ def get_object_metadata(object, metadata_guid):
 
 
 def or_empty(v):
-    if type(v) == str or type(v) == unicode:
-        return v.encode('utf8')
-    elif type(v) == int:
+    if isinstance(v, str) or isinstance(v, int):
         return v
     else:
         return ''
@@ -101,8 +105,8 @@ if __name__ == '__main__':
         print("Requesting: %s" % query)
 
         ga_ids = 'ga:51793449'
-        start_date = '2015-01-01'
-        end_date = '2015-12-31'
+        start_date = '2016-01-01'
+        end_date = '2016-12-31'
 
         plays = get_all_events(ga_ids,
                                'JW Player Video Plays',
@@ -113,11 +117,12 @@ if __name__ == '__main__':
                                    'JW Player Video Completes',
                                    start_date,
                                    end_date)
-        sorted_by = 'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc'
-        objects = get_all_objects(query, email, password,
-                                  sort=sorted_by)
 
-        with open(sys.argv[3], 'wb') as output_file:
+        sorted_by = 'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc'
+        objects = get_all_objects(query, email, password, sort=sorted_by)
+        print(objects)
+
+        with open(sys.argv[3], 'w') as output_file:
             output_writer = csv.writer(output_file)
             output_writer.writerow([
                 'Titel',
@@ -173,13 +178,14 @@ if __name__ == '__main__':
                         duration_hours = 0
 
                     # FIRST PUBLISHED
-                    first_published_date = metadata.find('dka:FirstPublishedDate', ns).text
-                    # Remove T00:00:00
-                    first_published_date = first_published_date.replace("T00:00:00", "")
-                    # Year first
-                    if len(first_published_date) == 10:
-                        if first_published_date.index('-') == 2:
-                            first_published_date = datetime.datetime.strptime(first_published_date, '%d-%m-%Y').strftime('%Y-%m-%d')
+                    first_published = metadata.find('dka:FirstPublishedDate', ns)
+                    if first_published:
+                        # Remove T00:00:00
+                        first_published = first_published.text.replace('T00:00:00', '')
+                        # Year first
+                        if len(first_published) == 10:
+                            if first_published.index('-') == 2:
+                                first_published = datetime.datetime.strptime(first_published, '%d-%m-%Y').strftime('%Y-%m-%d')
 
                     # PUBLISHED ON DKA
                     accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
@@ -226,7 +232,7 @@ if __name__ == '__main__':
                         or_empty(completed_hours_formatted),
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
-                        or_empty(first_published_date),
+                        or_empty(first_published),
                         or_empty(urlslug),
                         or_empty(url)
                     ]

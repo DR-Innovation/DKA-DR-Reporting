@@ -1,16 +1,12 @@
 from apiclient.discovery import build
-from oauth2client.client import SignedJwtAssertionCredentials
+from oauth2client.service_account import ServiceAccountCredentials
 from collections import defaultdict
 
-import urllib2
+import urllib
 import httplib2
 
 
-def get_service(api_name,
-                api_version,
-                scope,
-                key_file_location,
-                service_account_email):
+def get_service(api_name, api_version, scope, key_file):
     """Get a service that communicates to a Google API.
 
     Args:
@@ -24,13 +20,7 @@ def get_service(api_name,
     A service that is connected to the specified API.
     """
 
-    f = open(key_file_location, 'rb')
-    key = f.read()
-    f.close()
-
-    credentials = SignedJwtAssertionCredentials(service_account_email,
-                                                key,
-                                                scope=scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(key_file, scope)
 
     http = credentials.authorize(httplib2.Http())
 
@@ -59,18 +49,11 @@ def get_events(ga_service,
 
 
 def get_all_events(ga_ids, event_category, start_date, end_date):
-    # Use the developer console and replace the values with your
-    # service account email and relative location of your key file.
-    service_email = 'dka-report@dr-danskkulturarv.iam.gserviceaccount.com'
-    key_file_location = 'service-account-key.p12'
+    key_file = 'service-account-key.json'
     # Define the auth scopes to request.
-    scope = ['https://www.googleapis.com/auth/analytics.readonly']
+    scope = 'https://www.googleapis.com/auth/analytics.readonly'
     # Authenticate and construct service.
-    ga_service = get_service('analytics',
-                             'v3',
-                             scope,
-                             key_file_location,
-                             service_email).data().ga()
+    ga_service = get_service('analytics', 'v3', scope, key_file).data().ga()
     MAX_RESULTS = 1000
     start_index = 1
 
@@ -89,7 +72,7 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
         start_index += MAX_RESULTS
         total_results = result.get('totalResults')
         for url, count in result.get('rows'):
-            url = urllib2.unquote(url.encode('utf8')).decode('utf8')
+            url = urllib.parse.unquote(url)
             # Strip away any query strings
             url = url.split('?', 1)[0]
             events[url] += int(count)

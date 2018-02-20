@@ -33,6 +33,7 @@ def get_service(api_name, api_version, scope, key_file):
 def get_events(ga_service,
                ga_ids,
                event_category,
+               event_action,
                start_date,
                end_date,
                start_index=1,
@@ -41,14 +42,14 @@ def get_events(ga_service,
                           start_date=start_date,
                           end_date=end_date,
                           metrics='ga:totalEvents',
-                          dimensions='ga:eventLabel',
-                          filters='ga:eventCategory==%s' % event_category,
+                          dimensions='ga:pagePath',
+                          filters='ga:eventCategory==%s;ga:eventAction==%s' % (event_category, event_action),
                           sort='-ga:totalEvents',
                           max_results=max_results,
                           start_index=start_index).execute()
 
 
-def get_all_events(ga_ids, event_category, start_date, end_date):
+def get_all_events(ga_ids, event_category, event_action, start_date, end_date):
     key_file = 'service-account-key.json'
     # Define the auth scopes to request.
     scope = 'https://www.googleapis.com/auth/analytics.readonly'
@@ -65,16 +66,14 @@ def get_all_events(ga_ids, event_category, start_date, end_date):
         result = get_events(ga_service,
                             ga_ids,
                             event_category,
+                            event_action,
                             start_date,
                             end_date,
                             start_index=start_index,
                             max_results=MAX_RESULTS)
         start_index += MAX_RESULTS
         total_results = result.get('totalResults')
-        for url, count in result.get('rows'):
-            url = urllib.parse.unquote(url)
-            # Strip away any query strings
-            url = url.split('?', 1)[0]
+        for url, count in result.get('rows', []):
             events[url] += int(count)
 
     return events

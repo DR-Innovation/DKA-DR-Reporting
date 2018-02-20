@@ -8,7 +8,7 @@ import csv
 import datetime
 from google import get_all_events
 
-BASE_URL = 'http://api.danskkulturarv.dk'
+BASE_URL = 'https://api.danskkulturarv.dk'
 
 class ChaosException(Exception):
     pass
@@ -105,22 +105,24 @@ if __name__ == '__main__':
         print("Requesting: %s" % query)
 
         ga_ids = 'ga:51793449'
-        start_date = '2016-01-01'
-        end_date = '2016-12-31'
+        last_year = datetime.datetime.now().year - 1
+        start_date = '%s-01-01' % last_year
+        end_date = '%s-12-31' % last_year
 
         plays = get_all_events(ga_ids,
-                               'JW Player Video Plays',
+                               'JW Player Video',
+                               'Play',
                                start_date,
                                end_date)
 
         completes = get_all_events(ga_ids,
-                                   'JW Player Video Completes',
+                                   'JW Player Video',
+                                   'Complete',
                                    start_date,
                                    end_date)
 
         sorted_by = 'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc'
         objects = get_all_objects(query, email, password, sort=sorted_by)
-        print(objects)
 
         with open(sys.argv[3], 'w') as output_file:
             output_writer = csv.writer(output_file)
@@ -149,8 +151,8 @@ if __name__ == '__main__':
                 if metadata is None:
                     print('Found an object without metadata attached.')
                 else:
-                    title = metadata.find('dka:Title', ns).text
-                    external_identifier = metadata.find('dka:ExternalIdentifier', ns).text
+                    title = getattr(metadata.find('dka:Title', ns), 'text', '???')
+                    external_identifier = getattr(metadata.find('dka:ExternalIdentifier', ns), 'text', '???')
                     metafields = metadata.findall('dka:Metafield', ns)
 
                     # PRODUCTION ID
@@ -197,11 +199,11 @@ if __name__ == '__main__':
                             accesspoint_startdate = datetime.datetime.strptime(accesspoint_startdate, '%d-%m-%Y').strftime('%Y-%m-%d')
 
                     # URL
-                    url = 'http://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
+                    url = 'https://www.danskkulturarv.dk/chaos_post/%s/' % o.find('GUID').text
 
                     # SLUG
-                    slug = None if crowd_metadata is None else crowd_metadata.find('dkac:Slug', ns).text
-                    urlslug = 'http://www.danskkulturarv.dk/dr/%s/' % slug
+                    slug = None if crowd_metadata is None else getattr(crowd_metadata.find('dkac:Slug', ns), 'text', '???')
+                    urlslug = '/dr/%s/' % slug
 
                     # PLAY COUNT
                     play_count = plays.get(urlslug, 0)
@@ -233,7 +235,7 @@ if __name__ == '__main__':
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(first_published),
-                        or_empty(urlslug),
+                        or_empty('https://www.danskkulturarv.dk%s' % urlslug),
                         or_empty(url)
                     ]
                     output_writer.writerow(row)

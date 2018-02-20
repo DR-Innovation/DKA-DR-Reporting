@@ -1,5 +1,5 @@
-/output.csv
-*.p12
 *.pyc
-.venv
-service-account-key.json
+/env
+/service-account-key.json
+/dr-reports/*.xlsx
+/dr-reports/*.csv

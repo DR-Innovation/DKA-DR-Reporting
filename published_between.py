@@ -4,8 +4,9 @@ import sys
 import os
 import xml.etree.ElementTree as ET
 import requests
-import csv
+import unicodecsv as csv
 import datetime
+import urllib
 from google import get_all_events
 
 BASE_URL = 'https://api.danskkulturarv.dk'
@@ -124,7 +125,7 @@ if __name__ == '__main__':
         sorted_by = 'apc4c2b8da-a980-11e1-814b-02cea2621172_PubStart+asc'
         objects = get_all_objects(query, email, password, sort=sorted_by)
 
-        with open(sys.argv[3], 'w') as output_file:
+        with open(sys.argv[3], 'wb') as output_file:
             output_writer = csv.writer(output_file)
             output_writer.writerow([
                 'Titel',
@@ -235,7 +236,7 @@ if __name__ == '__main__':
                         #or_empty(object_created_date),
                         or_empty(accesspoint_startdate),
                         or_empty(first_published),
-                        or_empty('https://www.danskkulturarv.dk%s' % urlslug),
+                        or_empty('https://www.danskkulturarv.dk%s' % urllib.parse.quote(urlslug)),
                         or_empty(url)
                     ]
                     output_writer.writerow(row)

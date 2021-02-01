@@ -7,7 +7,7 @@ import requests
 import unicodecsv as csv
 import datetime
 import urllib
-from google import get_all_events
+from dka_google import get_all_events
 
 BASE_URL = 'https://api.danskkulturarv.dk'
 

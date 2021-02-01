@@ -6,6 +6,6 @@ sudo apt install python3-dev python3-pip libssl-dev libffi-dev gnumeric
 pip install -r requirements.txt
 
 ### Run the script manually
-```
-~/generate-dka-report.sh
+```console
+make report
 ```

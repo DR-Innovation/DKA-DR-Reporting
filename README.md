@@ -4,7 +4,7 @@ Scripts that collects objects published on danskkulturarv.dk for internal report
 
 ### Install the requirements
 
-```
+```console
 make install
 ```
 

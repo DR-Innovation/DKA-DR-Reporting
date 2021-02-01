@@ -1,6 +1,6 @@
 .PHONY: install report
 
-.DEFAULT: report
+.DEFAULT_GOAL := report
 
 export LC_ALL=C
 

@@ -1,5 +1,7 @@
 .PHONY: install report
 
+.DEFAULT: report
+
 export LC_ALL=C
 
 install:

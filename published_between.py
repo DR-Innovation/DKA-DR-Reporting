@@ -9,7 +9,7 @@ import datetime
 import urllib
 from dka_google import get_all_events
 
-BASE_URL = 'https://api.danskkulturarv.dk'
+BASE_URL = 'https://api.chaos-systems.com'
 
 class ChaosException(Exception):
     pass
@@ -64,8 +64,12 @@ def get_all_objects(query, email, password, sort=''):
     sessionGuid = get_session_guid()
     login(sessionGuid, email, password)
     while True:
-        objects = get_objects(query, sessionGuid, sort, pageIndex)
-        print('Got page indexed %u' % pageIndex)
+        try:
+            objects = get_objects(query, sessionGuid, sort, pageIndex)
+        except:
+            print('Got empty page indexed %u' % pageIndex)
+        else:
+            print('Got page indexed %u' % pageIndex)
         pageIndex += 1
         # Were objects returned?
         if(len(objects) > 0):
@@ -191,9 +195,12 @@ if __name__ == '__main__':
                                 first_published = datetime.datetime.strptime(first_published, '%d-%m-%Y').strftime('%Y-%m-%d')
 
                     # PUBLISHED ON DKA
-                    accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
-                    # Remove everything after first space
-                    accesspoint_startdate = accesspoint_startdate.split(' ', 1)[0]
+                    try:
+                        accesspoint_startdate = o.find('AccessPoints').find('AccessPoint_Object_Join').find('StartDate').text
+                        # Remove everything after first space
+                        accesspoint_startdate = accesspoint_startdate.split(' ', 1)[0]
+                    except:
+                        print("No accesspoint start date for %s" % o.find('GUID').text)
                     # Year first
                     if len(accesspoint_startdate) == 10:
                         if accesspoint_startdate.index('-') == 2:
